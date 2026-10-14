@@ -1,5 +1,3 @@
--- STX HUB Fixed Edition
-
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -11,10 +9,49 @@ local Workspace = game:GetService("Workspace")
 repeat task.wait() until Workspace.CurrentCamera
 local Camera = Workspace.CurrentCamera
 
+-- AUTO COPY DISCORD LINK ON EXECUTE
+pcall(function()
+    if setclipboard then
+        setclipboard("https://discord.gg/ySuXcHquHn")
+    elseif toclipboard then
+        toclipboard("https://discord.gg/ySuXcHquHn")
+    end
+end)
+
+-- Load Rayfield
+local success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end)
+
+if not success then
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "STX HUB",
+        Text = "ERROR: Rayfield failed to load. Enable 'HTTP Requests' in your executor.",
+        Duration = 10
+    })
+    return
+end
+
 -- Configuration
 local Config = {
-    ESP = { Enabled = false, Box = true, Name = true, Distance = true, Health = true, Tracers = true },
-    Combat = { Aimbot = false, AlwaysActive = false, IgnoreTeam = true, WallCheck = true, Prediction = true, AimKey = "MouseButton2", Smoothness = 0.5, FOV = 300, ShowFOV = true }
+    Visuals = { 
+        Enabled = false, Chams = true, Box = true, Name = true, Distance = true, Health = true, Tracers = true,
+        BombEnabled = true, BombName = true, BombDistance = true, BombTracers = true
+    },
+    Combat = { 
+        Aimbot = false, AlwaysActive = false, TargetLock = true, TargetPriority = "FOV", 
+        TargetPart = "Head", AimbotMode = "Camera",
+        AutoShoot = false, InstantSnap = true, WallCheck = true, ForceCamera = true, CharacterLock = true,
+        Prediction = true, PredictionMultiplier = 1.5, AimKey = "MouseButton2", 
+        Smoothness = 0.8, FOV = 300, ShowFOV = true 
+    },
+    Hitbox = {
+        Enabled = false, Size = 5, Transparency = 0.5, Part = "Head", Visualize = true
+    },
+    Movement = {
+        AutoBhop = false,
+        InfiniteJump = false
+    }
 }
 
 -- Bypass Setup
@@ -24,289 +61,409 @@ pcall(function()
 end)
 
 -- ==========================================
--- 1. CUSTOM STANDALONE AUTH UI
+-- 1. CREATE COPY DISCORD BUTTON
 -- ==========================================
-local AuthGui = Instance.new("ScreenGui")
-AuthGui.Name = "STX_CustomAuth"
-AuthGui.Parent = protectedParent
+local CopyGui = Instance.new("ScreenGui")
+CopyGui.Name = "STX_CopyDiscord"
+CopyGui.Parent = protectedParent
 
-local AuthFrame = Instance.new("Frame")
-AuthFrame.Size = UDim2.new(0, 320, 0, 260)
-AuthFrame.Position = UDim2.new(0.5, -160, 0.5, -130)
-AuthFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-AuthFrame.BorderSizePixel = 2
-AuthFrame.BorderColor3 = Color3.fromRGB(88, 101, 242)
-AuthFrame.Active = true
-AuthFrame.Draggable = true
-AuthFrame.Parent = AuthGui
-
-local AuthTitle = Instance.new("TextLabel")
-AuthTitle.Size = UDim2.new(1, 0, 0, 35)
-AuthTitle.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-AuthTitle.Text = "STX HUB | Authentication"
-AuthTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-AuthTitle.Font = Enum.Font.GothamBold
-AuthTitle.TextSize = 16
-AuthTitle.Parent = AuthFrame
-
-local AuthInfo = Instance.new("TextLabel")
-AuthInfo.Size = UDim2.new(1, -20, 0, 45)
-AuthInfo.Position = UDim2.new(0, 10, 0, 45)
-AuthInfo.BackgroundTransparency = 1
-AuthInfo.Text = "Join the Discord and type '!key' to get yours.\nDiscord: discord.gg/pdkkV9SA5A"
-AuthInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
-AuthInfo.Font = Enum.Font.Gotham
-AuthInfo.TextSize = 12
-AuthInfo.TextWrapped = true
-AuthInfo.Parent = AuthFrame
+local CopyFrame = Instance.new("Frame")
+CopyFrame.Size = UDim2.new(0, 200, 0, 40)
+CopyFrame.Position = UDim2.new(0, 20, 0.5, -20)
+CopyFrame.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+CopyFrame.BorderSizePixel = 0
+CopyFrame.Active = true
+CopyFrame.Draggable = true
+CopyFrame.Parent = CopyGui
 
 local CopyBtn = Instance.new("TextButton")
-CopyBtn.Size = UDim2.new(0.8, 0, 0, 30)
-CopyBtn.Position = UDim2.new(0.1, 0, 0.36, 0)
-CopyBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-CopyBtn.Text = "Copy Discord Link"
+CopyBtn.Size = UDim2.new(1, 0, 1, 0)
+CopyBtn.BackgroundTransparency = 1
+CopyBtn.Text = "Click to Copy Discord Link"
 CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CopyBtn.Font = Enum.Font.GothamBold
-CopyBtn.TextSize = 13
-CopyBtn.Parent = AuthFrame
+CopyBtn.TextSize = 12
+CopyBtn.Parent = CopyFrame
 
-local KeyBox = Instance.new("TextBox")
-KeyBox.Size = UDim2.new(0.8, 0, 0, 35)
-KeyBox.Position = UDim2.new(0.1, 0, 0.53, 0)
-KeyBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyBox.PlaceholderText = "Enter key here..."
-KeyBox.Font = Enum.Font.Gotham
-KeyBox.TextSize = 14
-KeyBox.Parent = AuthFrame
-
-local ContinueBtn = Instance.new("TextButton")
-ContinueBtn.Size = UDim2.new(0.8, 0, 0, 40)
-ContinueBtn.Position = UDim2.new(0.1, 0, 0.75, 0)
-ContinueBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-ContinueBtn.Text = "CONTINUE"
-ContinueBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ContinueBtn.Font = Enum.Font.GothamBold
-ContinueBtn.TextSize = 16
-ContinueBtn.Parent = AuthFrame
-
--- Copy Button Logic
 CopyBtn.MouseButton1Click:Connect(function()
     pcall(function()
-        if setclipboard then setclipboard("https://discord.gg/pdkkV9SA5A")
-        elseif toclipboard then toclipboard("https://discord.gg/pdkkV9SA5A") end
+        if setclipboard then setclipboard("https://discord.gg/ySuXcHquHn")
+        elseif toclipboard then toclipboard("https://discord.gg/ySuXcHquHn") end
     end)
     CopyBtn.Text = "Copied!"
-    CopyBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+    CopyFrame.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
     task.wait(2)
-    CopyBtn.Text = "Copy Discord Link"
-    CopyBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+    CopyBtn.Text = "Click to Copy Discord Link"
+    CopyFrame.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
 end)
 
--- ==========================================
--- 2. ASCII KEY PROTECTION (THIS IS THE FIX!)
--- ==========================================
--- Spells "subtostx" using numbers.
-local keyCodes = {115, 117, 98, 116, 111, 115, 116, 120}
-local realKey = ""
-for _, code in ipairs(keyCodes) do
-    realKey = realKey .. string.char(code)
+-- Destroy the copy button when the main hub loads
+local function DestroyCopyGui()
+    if CopyGui then CopyGui:Destroy() end
 end
 
-ContinueBtn.MouseButton1Click:Connect(function()
-    if KeyBox.Text == realKey then
-        AuthGui:Destroy()
-        LoadMainHub()
-    else
-        KeyBox.Text = ""
-        KeyBox.PlaceholderText = "Incorrect Key!"
-        KeyBox.PlaceholderColor3 = Color3.fromRGB(255, 50, 50)
+-- ==========================================
+-- 2. CREATE RAYFIELD WINDOW
+-- ==========================================
+local Window = Rayfield:CreateWindow({
+    Name = "STX HUB | Ultra",
+    LoadingTitle = "STX HUB Loading...",
+    LoadingSubtitle = "by STX",
+    ConfigurationSaving = { Enabled = false },
+    KeySystem = true,
+    KeySettings = {
+        Title = "STX HUB Authentication",
+        Subtitle = "Enter the key to access",
+        Note = "Discord Link Copied to Clipboard! Join: https://discord.gg/ySuXcHquHn",
+        FileName = "STXKey",
+        SaveKey = false,
+        GrabKeyFromSite = false,
+        Key = {"subtostx"}
+    }
+})
+
+-- Hook into the key system to destroy the copy button on success
+local originalKeyCheck = Window.KeySystem
+pcall(function()
+    if Rayfield.KeySystem then
+        -- Since we can't hook directly, we just wait for the main window to load
+        -- Alternatively, just let it stay. It's a small button.
+    end
+end)
+
+-- Cleanup CopyGui when the main Hub loads (Rayfield destroys the Key window)
+-- We can check periodically if the Key window is gone
+task.spawn(function()
+    while task.wait(1) do
+        if Window and Window.Name then
+            -- If Rayfield successfully loaded the main window, destroy the copy button
+            if Window.Name == "STX HUB | Ultra" then
+                DestroyCopyGui()
+                break
+            end
+        end
     end
 end)
 
 -- ==========================================
--- 3. MAIN HUB FUNCTION (Rayfield)
+-- 3. VISUALS TAB
 -- ==========================================
-function LoadMainHub()
-    local success, Rayfield = pcall(function()
-        return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-    end)
+local VisualsTab = Window:CreateTab("Visuals", "eye")
+VisualsTab:CreateSection("Player Visuals")
+VisualsTab:CreateToggle({ Name = "Enable ESP", CurrentValue = false, Flag = "VIS_Enabled", Callback = function(state) Config.Visuals.Enabled = state end })
+VisualsTab:CreateToggle({ Name = "Chams (Safe Color Method)", CurrentValue = true, Flag = "VIS_Chams", Callback = function(state) Config.Visuals.Chams = state end })
+VisualsTab:CreateToggle({ Name = "Show Box", CurrentValue = true, Flag = "VIS_Box", Callback = function(state) Config.Visuals.Box = state end })
+VisualsTab:CreateToggle({ Name = "Show Name", CurrentValue = true, Flag = "VIS_Name", Callback = function(state) Config.Visuals.Name = state end })
+VisualsTab:CreateToggle({ Name = "Show Distance", CurrentValue = true, Flag = "VIS_Distance", Callback = function(state) Config.Visuals.Distance = state end })
+VisualsTab:CreateToggle({ Name = "Show Health", CurrentValue = true, Flag = "VIS_Health", Callback = function(state) Config.Visuals.Health = state end })
+VisualsTab:CreateToggle({ Name = "Show Tracers", CurrentValue = true, Flag = "VIS_Tracers", Callback = function(state) Config.Visuals.Tracers = state end })
 
-    if not success then
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "STX HUB",
-            Text = "ERROR: Rayfield failed to load. Enable 'HTTP Requests' in your executor.",
-            Duration = 10
-        })
-        return
-    end
+VisualsTab:CreateSection("Bomb ESP")
+VisualsTab:CreateToggle({ Name = "Enable Bomb ESP", CurrentValue = true, Flag = "VIS_BombEnabled", Callback = function(state) Config.Visuals.BombEnabled = state end })
+VisualsTab:CreateToggle({ Name = "Show Bomb Name", CurrentValue = true, Flag = "VIS_BombName", Callback = function(state) Config.Visuals.BombName = state end })
+VisualsTab:CreateToggle({ Name = "Show Bomb Distance", CurrentValue = true, Flag = "VIS_BombDistance", Callback = function(state) Config.Visuals.BombDistance = state end })
+VisualsTab:CreateToggle({ Name = "Show Bomb Tracers", CurrentValue = true, Flag = "VIS_BombTracers", Callback = function(state) Config.Visuals.BombTracers = state end })
 
-    local Window = Rayfield:CreateWindow({
-        Name = "STX HUB | Premium",
-        LoadingTitle = "STX HUB Loading...",
-        LoadingSubtitle = "by STX",
-        ConfigurationSaving = { Enabled = false },
-        KeySystem = false
-    })
+-- ==========================================
+-- 4. COMBAT TAB
+-- ==========================================
+local CombatTab = Window:CreateTab("Combat", "crosshair")
+CombatTab:CreateSection("Aimbot Core")
+CombatTab:CreateToggle({ Name = "Enable Aimbot", CurrentValue = false, Flag = "Combat_Aimbot", Callback = function(state) Config.Combat.Aimbot = state end })
+CombatTab:CreateToggle({ Name = "ALWAYS ACTIVE", CurrentValue = false, Flag = "Combat_AlwaysActive", Callback = function(state) Config.Combat.AlwaysActive = state end })
+CombatTab:CreateDropdown({ Name = "Aim Key", Options = {"MouseButton2", "MouseButton1", "E", "LeftAlt", "CapsLock", "LeftShift"}, CurrentOption = {"MouseButton2"}, Flag = "Combat_AimKey", Callback = function(option) Config.Combat.AimKey = option[1] end })
 
-    -- ESP TAB
-    local ESPTab = Window:CreateTab("ESP", 4483362458)
-    ESPTab:CreateSection("ESP Settings")
-    ESPTab:CreateToggle({ Name = "Enable ESP", CurrentValue = false, Flag = "ESP_Enabled", Callback = function(state) Config.ESP.Enabled = state end })
-    ESPTab:CreateToggle({ Name = "Show Box", CurrentValue = true, Flag = "ESP_Box", Callback = function(state) Config.ESP.Box = state end })
-    ESPTab:CreateToggle({ Name = "Show Name", CurrentValue = true, Flag = "ESP_Name", Callback = function(state) Config.ESP.Name = state end })
-    ESPTab:CreateToggle({ Name = "Show Distance", CurrentValue = true, Flag = "ESP_Distance", Callback = function(state) Config.ESP.Distance = state end })
-    ESPTab:CreateToggle({ Name = "Show Health", CurrentValue = true, Flag = "ESP_Health", Callback = function(state) Config.ESP.Health = state end })
-    ESPTab:CreateToggle({ Name = "Show Tracers", CurrentValue = true, Flag = "ESP_Tracers", Callback = function(state) Config.ESP.Tracers = state end })
+CombatTab:CreateSection("Targeting Modes")
+CombatTab:CreateDropdown({ 
+    Name = "Aimbot Mode", 
+    Options = {"Camera (Moves Camera)", "Mouse (Locks Mouse)", "Silent (No Camera Move)"}, 
+    CurrentOption = {"Camera (Moves Camera)"}, 
+    Flag = "Combat_AimbotMode", 
+    Callback = function(option) 
+        if option[1]:find("Camera") then Config.Combat.AimbotMode = "Camera"
+        elseif option[1]:find("Mouse") then Config.Combat.AimbotMode = "Mouse"
+        elseif option[1]:find("Silent") then Config.Combat.AimbotMode = "Silent" end
+    end 
+})
+CombatTab:CreateDropdown({ 
+    Name = "Target Part", 
+    Options = {"Head", "HumanoidRootPart", "UpperTorso"}, 
+    CurrentOption = {"Head"}, 
+    Flag = "Combat_TargetPart", 
+    Callback = function(option) Config.Combat.TargetPart = option[1] end 
+})
+CombatTab:CreateDropdown({ 
+    Name = "Target Priority", 
+    Options = {"FOV (Closest to Crosshair)", "Distance (Closest Player)", "Health (Lowest HP)"}, 
+    CurrentOption = {"FOV (Closest to Crosshair)"}, 
+    Flag = "Combat_TargetPriority", 
+    Callback = function(option) 
+        if option[1]:find("FOV") then Config.Combat.TargetPriority = "FOV"
+        elseif option[1]:find("Distance") then Config.Combat.TargetPriority = "Distance"
+        elseif option[1]:find("Health") then Config.Combat.TargetPriority = "Health" end
+    end 
+})
+CombatTab:CreateToggle({ Name = "Target Lock (Sticky Aim)", CurrentValue = true, Flag = "Combat_TargetLock", Callback = function(state) Config.Combat.TargetLock = state end })
 
-    -- COMBAT TAB
-    local CombatTab = Window:CreateTab("Combat", 4483362458)
-    CombatTab:CreateSection("Aimbot Settings")
-    CombatTab:CreateToggle({ Name = "Enable Aimbot", CurrentValue = false, Flag = "Combat_Aimbot", Callback = function(state) Config.Combat.Aimbot = state end })
-    CombatTab:CreateToggle({ Name = "ALWAYS ACTIVE", CurrentValue = false, Flag = "Combat_AlwaysActive", Callback = function(state) Config.Combat.AlwaysActive = state end })
-    CombatTab:CreateToggle({ Name = "Ignore Team", CurrentValue = true, Flag = "Combat_IgnoreTeam", Callback = function(state) Config.Combat.IgnoreTeam = state end })
-    CombatTab:CreateToggle({ Name = "Wall Check", CurrentValue = true, Flag = "Combat_WallCheck", Callback = function(state) Config.Combat.WallCheck = state end })
-    CombatTab:CreateToggle({ Name = "Prediction", CurrentValue = true, Flag = "Combat_Prediction", Callback = function(state) Config.Combat.Prediction = state end })
-    CombatTab:CreateDropdown({ Name = "Aim Key", Options = {"MouseButton2", "MouseButton1", "E", "LeftAlt", "CapsLock", "LeftShift"}, CurrentOption = {"MouseButton2"}, Flag = "Combat_AimKey", Callback = function(option) Config.Combat.AimKey = option[1] end })
-    CombatTab:CreateSlider({ Name = "FOV", Range = {10, 360}, Increment = 1, Suffix = " FOV", CurrentValue = 300, Flag = "Combat_FOV", Callback = function(val) Config.Combat.FOV = val end })
-    CombatTab:CreateSlider({ Name = "Smoothness", Range = {1, 100}, Increment = 1, Suffix = "%", CurrentValue = 50, Flag = "Combat_Smoothness", Callback = function(val) Config.Combat.Smoothness = val / 100 end })
-    CombatTab:CreateToggle({ Name = "Show FOV Circle", CurrentValue = true, Flag = "Combat_ShowFOV", Callback = function(state) Config.Combat.ShowFOV = state end })
+CombatTab:CreateSection("Aimbot Performance")
+CombatTab:CreateSlider({ Name = "FOV", Range = {10, 360}, Increment = 1, Suffix = " FOV", CurrentValue = 300, Flag = "Combat_FOV", Callback = function(val) Config.Combat.FOV = val end })
+CombatTab:CreateToggle({ Name = "Instant Snap", CurrentValue = true, Flag = "Combat_InstantSnap", Callback = function(state) Config.Combat.InstantSnap = state end })
+CombatTab:CreateSlider({ Name = "Smoothness (If not Instant)", Range = {1, 100}, Increment = 1, Suffix = "%", CurrentValue = 80, Flag = "Combat_Smoothness", Callback = function(val) Config.Combat.Smoothness = val / 100 end })
+CombatTab:CreateToggle({ Name = "Force Camera Lock", CurrentValue = true, Flag = "Combat_ForceCamera", Callback = function(state) Config.Combat.ForceCamera = state end })
+CombatTab:CreateToggle({ Name = "Character Lock (Stops Gun Moving)", CurrentValue = true, Flag = "Combat_CharacterLock", Callback = function(state) Config.Combat.CharacterLock = state end })
+CombatTab:CreateToggle({ Name = "Show FOV Circle", CurrentValue = true, Flag = "Combat_ShowFOV", Callback = function(state) Config.Combat.ShowFOV = state end })
 
-    -- PLAYER LIST TAB
-    local PlayerListTab = Window:CreateTab("Player List", 4483362458)
-    PlayerListTab:CreateSection("Server Status")
-    local PlayerListPara = PlayerListTab:CreateParagraph({ Title = "Loading...", Content = "Scanning game.Players..." })
-    task.spawn(function()
-        while task.wait(1) do
-            local totalPlayers = #Players:GetPlayers() - 1
-            local loadedPlayers = 0
-            local charFolder = workspace:FindFirstChild("Characters")
-            if charFolder then loadedPlayers = #charFolder:GetChildren() end
-            pcall(function()
-                PlayerListPara.Title = "Total Players in Server: " .. totalPlayers
-                PlayerListPara.Content = "Players Loaded in Workspace: " .. loadedPlayers .. "\n\nIf 'Loaded' is lower than 'Total', the game uses StreamingEnabled. No script can ESP them until you get closer."
-            end)
-        end
-    end)
+CombatTab:CreateSection("Advanced Aim")
+CombatTab:CreateToggle({ Name = "Prediction (Hit moving targets)", CurrentValue = true, Flag = "Combat_Prediction", Callback = function(state) Config.Combat.Prediction = state end })
+CombatTab:CreateSlider({ Name = "Prediction Multiplier", Range = {1, 30}, Increment = 1, Suffix = "x", CurrentValue = 15, Flag = "Combat_PredMult", Callback = function(val) Config.Combat.PredictionMultiplier = val / 10 end })
+CombatTab:CreateToggle({ Name = "Wall Check", CurrentValue = true, Flag = "Combat_WallCheck", Callback = function(state) Config.Combat.WallCheck = state end })
+CombatTab:CreateToggle({ Name = "Auto Shoot (Triggerbot)", CurrentValue = false, Flag = "Combat_AutoShoot", Callback = function(state) Config.Combat.AutoShoot = state end })
 
-    -- TARGET SCANNER
-    local function GetTargets()
-        local targets = {}
-        local charFolder = workspace:FindFirstChild("Characters")
-        if not charFolder then return targets end
-        for _, child in ipairs(charFolder:GetChildren()) do
-            if child:IsA("Model") or child:IsA("Folder") then
-                local head = child:FindFirstChild("Head")
-                local root = child:FindFirstChild("HumanoidRootPart")
-                local charModel = child:FindFirstChild("CharacterModel")
-                if charModel then
-                    head = head or charModel:FindFirstChild("Head")
-                    root = root or charModel:FindFirstChild("HumanoidRootPart")
-                end
-                if head and root then
-                    local player = Players:GetPlayerFromCharacter(child) or Players:FindFirstChild(child.Name)
-                    local hum = child:FindFirstChildOfClass("Humanoid") or (charModel and charModel:FindFirstChildOfClass("Humanoid"))
-                    table.insert(targets, {Head = head, Root = root, Model = child, Player = player, Health = hum and hum.Health or 100})
+-- ==========================================
+-- 5. HITBOX TAB
+-- ==========================================
+local HitboxTab = Window:CreateTab("Hitbox", "box")
+HitboxTab:CreateSection("Hitbox Expander")
+HitboxTab:CreateParagraph({ Title = "Warning", Content = "Hitbox Expander is highly detectable by anti-cheats. Use at your own risk!" })
+HitboxTab:CreateToggle({ Name = "Enable Hitbox Expander", CurrentValue = false, Flag = "Hitbox_Enabled", Callback = function(state) Config.Hitbox.Enabled = state end })
+HitboxTab:CreateDropdown({ 
+    Name = "Expand Part", 
+    Options = {"Head", "HumanoidRootPart", "UpperTorso"}, 
+    CurrentOption = {"Head"}, 
+    Flag = "Hitbox_Part", 
+    Callback = function(option) Config.Hitbox.Part = option[1] end 
+})
+HitboxTab:CreateSlider({ Name = "Hitbox Size", Range = {1, 20}, Increment = 1, Suffix = "x", CurrentValue = 5, Flag = "Hitbox_Size", Callback = function(val) Config.Hitbox.Size = val end })
+HitboxTab:CreateSlider({ Name = "Hitbox Transparency", Range = {0, 1}, Increment = 0.1, Suffix = "", CurrentValue = 0.5, Flag = "Hitbox_Transparency", Callback = function(val) Config.Hitbox.Transparency = val end })
+HitboxTab:CreateToggle({ Name = "Visualize Hitbox (See it)", CurrentValue = true, Flag = "Hitbox_Visualize", Callback = function(state) Config.Hitbox.Visualize = state end })
+
+-- ==========================================
+-- 6. MOVEMENT TAB
+-- ==========================================
+local MovementTab = Window:CreateTab("Movement", "activity")
+MovementTab:CreateSection("Movement Options")
+MovementTab:CreateToggle({ Name = "Auto Bhop (Hold Space)", CurrentValue = false, Flag = "Move_AutoBhop", Callback = function(state) Config.Movement.AutoBhop = state end })
+MovementTab:CreateToggle({ Name = "Infinite Jump", CurrentValue = false, Flag = "Move_InfJump", Callback = function(state) Config.Movement.InfiniteJump = state end })
+
+-- ==========================================
+-- 7. COMING SOON TAB
+-- ==========================================
+local SoonTab = Window:CreateTab("Coming Soon", "clock")
+SoonTab:CreateSection("Upcoming Features")
+SoonTab:CreateParagraph({ Title = "Coming Soon", Content = "Stay tuned for more updates!\n\n- Anti-Aim\n- Fly\n- Speed Hack\n- Auto Aim Assist\n\nJoin the Discord for updates: https://discord.gg/ySuXcHquHn" })
+
+-- ==========================================
+-- 8. TARGET SCANNER
+-- ==========================================
+local function GetTargets()
+    local targets = {}
+    local charFolder = workspace:FindFirstChild("Characters")
+    if not charFolder then return targets end
+    
+    for _, child in ipairs(charFolder:GetChildren()) do
+        if child:IsA("Model") or child:IsA("Folder") then
+            local head = child:FindFirstChild("Head")
+            local root = child:FindFirstChild("HumanoidRootPart")
+            local torso = child:FindFirstChild("UpperTorso")
+            local charModel = child:FindFirstChild("CharacterModel")
+            if charModel then
+                head = head or charModel:FindFirstChild("Head")
+                root = root or charModel:FindFirstChild("HumanoidRootPart")
+                torso = torso or charModel:FindFirstChild("UpperTorso")
+            end
+            if head and root then
+                local player = Players:GetPlayerFromCharacter(child) or Players:FindFirstChild(child.Name)
+                local hum = child:FindFirstChildOfClass("Humanoid") or (charModel and charModel:FindFirstChildOfClass("Humanoid"))
+                local health = hum and hum.Health or 100
+                
+                if health > 0 then
+                    table.insert(targets, {Head = head, Root = root, Torso = torso, Model = charModel or child, Player = player, Health = health})
                 end
             end
         end
-        return targets
     end
+    return targets
+end
 
-    -- DRAWING SETUP
-    local ESPObjects = {}
-    local FOVCircle = Drawing.new("Circle")
-    FOVCircle.Thickness = 1
-    FOVCircle.Color = Color3.fromRGB(0, 255, 0)
-    FOVCircle.Filled = false
-    FOVCircle.Transparency = 1
-    FOVCircle.Visible = false
+-- ==========================================
+-- 9. DRAWING & SAFE CHAMS & HITBOX SETUP
+-- ==========================================
+local ESPObjects = {}
+local OriginalColors = {}
+local OriginalSizes = {}
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 1
+FOVCircle.Color = Color3.fromRGB(0, 255, 0)
+FOVCircle.Filled = false
+FOVCircle.Transparency = 1
+FOVCircle.Visible = false
 
-    local function CreateDrawing(target)
-        local root = target.Root
-        if ESPObjects[root] then return end
-        local box = Drawing.new("Square")
-        box.Thickness = 1
-        box.Color = Color3.fromRGB(255, 0, 0)
-        box.Filled = false
-        box.Transparency = 1
-        box.Visible = false
-        local name = Drawing.new("Text")
-        name.Size = 14
-        name.Center = true
-        name.Outline = true
-        name.Color = Color3.fromRGB(255, 255, 255)
-        name.Visible = false
-        local health = Drawing.new("Text")
-        health.Size = 12
-        health.Center = true
-        health.Outline = true
-        health.Color = Color3.fromRGB(0, 255, 0)
-        health.Visible = false
-        local tracer = Drawing.new("Line")
-        tracer.Thickness = 1
-        tracer.Color = Color3.fromRGB(255, 0, 0)
-        tracer.Visible = false
-        ESPObjects[root] = {Box = box, Name = name, Health = health, Tracer = tracer}
-    end
+local function CreateDrawing(target)
+    local root = target.Root
+    if ESPObjects[root] then return end
+    local box = Drawing.new("Square")
+    box.Thickness = 1
+    box.Color = Color3.fromRGB(255, 0, 0)
+    box.Filled = false
+    box.Transparency = 1
+    box.Visible = false
+    local name = Drawing.new("Text")
+    name.Size = 14
+    name.Center = true
+    name.Outline = true
+    name.Color = Color3.fromRGB(255, 255, 255)
+    name.Visible = false
+    local health = Drawing.new("Text")
+    health.Size = 12
+    health.Center = true
+    health.Outline = true
+    health.Color = Color3.fromRGB(0, 255, 0)
+    health.Visible = false
+    local tracer = Drawing.new("Line")
+    tracer.Thickness = 1
+    tracer.Color = Color3.fromRGB(255, 0, 0)
+    tracer.Visible = false
+    ESPObjects[root] = {Box = box, Name = name, Health = health, Tracer = tracer}
+end
 
-    local cachedTargets = {}
-    task.spawn(function()
-        while task.wait(0.1) do
-            cachedTargets = GetTargets()
-        end
-    end)
-
-    -- MAIN RENDER LOOP
-    RunService.RenderStepped:Connect(function()
-        if Config.Combat.Aimbot and Config.Combat.ShowFOV then
-            FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-            FOVCircle.Radius = Config.Combat.FOV
-            FOVCircle.Visible = true
-        else
-            FOVCircle.Visible = false
-        end
-        if Config.ESP.Enabled then
-            for _, target in ipairs(cachedTargets) do CreateDrawing(target) end
-            for root, esp in pairs(ESPObjects) do
-                local targetData = nil
-                for _, t in ipairs(cachedTargets) do
-                    if t.Root == root then targetData = t break end
+local function ApplyChams(targetModel, enable)
+    if enable then
+        for _, part in ipairs(targetModel:GetDescendants()) do
+            if part:IsA("BasePart") then
+                if not OriginalColors[part] then
+                    OriginalColors[part] = part.Color
                 end
-                if targetData and root.Parent then
-                    local vector, onScreen = Camera:WorldToViewportPoint(targetData.Head.Position)
-                    if onScreen and vector.Z > 0 then
-                        local top = Camera:WorldToViewportPoint(targetData.Head.Position + Vector3.new(0, 1, 0))
-                        local bottom = Camera:WorldToViewportPoint(targetData.Root.Position - Vector3.new(0, 3, 0))
-                        local height = math.abs(top.Y - bottom.Y)
-                        local width = height / 2
-                        local distance = (Camera.CFrame.Position - targetData.Root.Position).Magnitude
-                        esp.Box.Size = Vector2.new(width, height)
-                        esp.Box.Position = Vector2.new(vector.X - width/2, top.Y)
-                        esp.Box.Visible = Config.ESP.Box
-                        local displayText = targetData.Model.Name
-                        if Config.ESP.Distance then displayText = displayText .. " [" .. math.floor(distance) .. "m]" end
-                        esp.Name.Position = Vector2.new(vector.X, top.Y - 18)
-                        esp.Name.Text = displayText
-                        esp.Name.Visible = Config.ESP.Name or Config.ESP.Distance
-                        if Config.ESP.Health then
-                            esp.Health.Position = Vector2.new(vector.X, top.Y + height + 2)
-                            esp.Health.Text = "HP: " .. math.floor(targetData.Health)
-                            esp.Health.Visible = true
-                        else
-                            esp.Health.Visible = false
-                        end
-                        if Config.ESP.Tracers then
-                            esp.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                            esp.Tracer.To = Vector2.new(vector.X, top.Y + height)
-                            esp.Tracer.Visible = true
-                        else
-                            esp.Tracer.Visible = false
-                        end
+                part.Color = Color3.fromRGB(255, 0, 0)
+            end
+        end
+    else
+        for part, originalColor in pairs(OriginalColors) do
+            if part and part.Parent then
+                part.Color = originalColor
+            end
+            OriginalColors[part] = nil
+        end
+    end
+end
+
+local function ApplyHitbox(targetData, enable)
+    local part = nil
+    if Config.Hitbox.Part == "Head" then part = targetData.Head
+    elseif Config.Hitbox.Part == "HumanoidRootPart" then part = targetData.Root
+    elseif Config.Hitbox.Part == "UpperTorso" then part = targetData.Torso end
+    
+    if part and part:IsA("BasePart") then
+        if enable then
+            if not OriginalSizes[part] then
+                OriginalSizes[part] = {Size = part.Size, Transparency = part.Transparency, CanCollide = part.CanCollide}
+            end
+            part.Size = Vector3.new(Config.Hitbox.Size, Config.Hitbox.Size, Config.Hitbox.Size)
+            if Config.Hitbox.Visualize then
+                part.Transparency = Config.Hitbox.Transparency
+            end
+            part.CanCollide = false
+        else
+            if OriginalSizes[part] then
+                part.Size = OriginalSizes[part].Size
+                part.Transparency = OriginalSizes[part].Transparency
+                part.CanCollide = OriginalSizes[part].CanCollide
+                OriginalSizes[part] = nil
+            end
+        end
+    end
+end
+
+-- Bomb ESP Setup
+local BombBox = Drawing.new("Square")
+BombBox.Thickness = 2
+BombBox.Color = Color3.fromRGB(255, 165, 0)
+BombBox.Filled = false
+BombBox.Transparency = 1
+BombBox.Visible = false
+
+local BombName = Drawing.new("Text")
+BombName.Size = 14
+BombName.Center = true
+BombName.Outline = true
+BombName.Color = Color3.fromRGB(255, 165, 0)
+BombName.Visible = false
+
+local BombTracer = Drawing.new("Line")
+BombTracer.Thickness = 1
+BombTracer.Color = Color3.fromRGB(255, 165, 0)
+BombTracer.Visible = false
+
+local cachedTargets = {}
+task.spawn(function()
+    while task.wait(0.1) do
+        cachedTargets = GetTargets()
+    end
+end)
+
+-- ==========================================
+-- 10. MAIN RENDER LOOP (VISUALS & HITBOX)
+-- ==========================================
+RunService.RenderStepped:Connect(function()
+    if Config.Combat.Aimbot and Config.Combat.ShowFOV then
+        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        FOVCircle.Radius = Config.Combat.FOV
+        FOVCircle.Visible = true
+    else
+        FOVCircle.Visible = false
+    end
+
+    -- Player ESP & Hitbox
+    if Config.Visuals.Enabled or Config.Hitbox.Enabled then
+        for _, target in ipairs(cachedTargets) do 
+            CreateDrawing(target) 
+            if Config.Visuals.Chams then ApplyChams(target.Model, true) end
+            if Config.Hitbox.Enabled then ApplyHitbox(target, true) end
+        end
+        
+        for root, esp in pairs(ESPObjects) do
+            local targetData = nil
+            for _, t in ipairs(cachedTargets) do
+                if t.Root == root then targetData = t break end
+            end
+            
+            local isValidTarget = false
+            if targetData and targetData.Health > 0 and root.Parent then
+                isValidTarget = true
+            end
+
+            if isValidTarget then
+                local vector, onScreen = Camera:WorldToViewportPoint(targetData.Head.Position)
+                if onScreen and vector.Z > 0 then
+                    local top = Camera:WorldToViewportPoint(targetData.Head.Position + Vector3.new(0, 1, 0))
+                    local bottom = Camera:WorldToViewportPoint(targetData.Root.Position - Vector3.new(0, 3, 0))
+                    local height = math.abs(top.Y - bottom.Y)
+                    local width = height / 2
+                    local distance = (Camera.CFrame.Position - targetData.Root.Position).Magnitude
+                    
+                    esp.Box.Size = Vector2.new(width, height)
+                    esp.Box.Position = Vector2.new(vector.X - width/2, top.Y)
+                    esp.Box.Visible = Config.Visuals.Box
+                    
+                    local displayText = targetData.Model.Name
+                    if Config.Visuals.Distance then displayText = displayText .. " [" .. math.floor(distance) .. "m]" end
+                    
+                    esp.Name.Position = Vector2.new(vector.X, top.Y - 18)
+                    esp.Name.Text = displayText
+                    esp.Name.Visible = Config.Visuals.Name or Config.Visuals.Distance
+                    
+                    if Config.Visuals.Health then
+                        esp.Health.Position = Vector2.new(vector.X, top.Y + height + 2)
+                        esp.Health.Text = "HP: " .. math.floor(targetData.Health)
+                        esp.Health.Visible = true
                     else
-                        esp.Box.Visible = false
-                        esp.Name.Visible = false
                         esp.Health.Visible = false
+                    end
+                    
+                    if Config.Visuals.Tracers then
+                        esp.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                        esp.Tracer.To = Vector2.new(vector.X, top.Y + height)
+                        esp.Tracer.Visible = true
+                    else
                         esp.Tracer.Visible = false
                     end
                 else
@@ -315,93 +472,292 @@ function LoadMainHub()
                     esp.Health.Visible = false
                     esp.Tracer.Visible = false
                 end
-            end
-        else
-            for _, esp in pairs(ESPObjects) do
+            else
                 esp.Box.Visible = false
                 esp.Name.Visible = false
                 esp.Health.Visible = false
                 esp.Tracer.Visible = false
+                
+                if not targetData or targetData.Health <= 0 or not root.Parent then
+                    esp.Box:Remove()
+                    esp.Name:Remove()
+                    esp.Health:Remove()
+                    esp.Tracer:Remove()
+                    ESPObjects[root] = nil
+                    if targetData and targetData.Model then ApplyChams(targetData.Model, false) end
+                    if targetData then ApplyHitbox(targetData, false) end
+                end
             end
         end
-    end)
-
-    -- COMBAT LOGIC
-    local currentTarget = nil
-    local function IsVisible(targetPart)
-        local raycastParams = RaycastParams.new()
-        raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
-        raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-        local origin = Camera.CFrame.Position
-        local direction = (targetPart.Position - origin)
-        local result = workspace:Raycast(origin, direction, raycastParams)
-        if result then return false end
-        return true
+    else
+        for _, esp in pairs(ESPObjects) do
+            esp.Box.Visible = false
+            esp.Name.Visible = false
+            esp.Health.Visible = false
+            esp.Tracer.Visible = false
+        end
+        for part, originalColor in pairs(OriginalColors) do
+            if part and part.Parent then part.Color = originalColor end
+            OriginalColors[part] = nil
+        end
+        for part, originalData in pairs(OriginalSizes) do
+            if part and part.Parent then
+                part.Size = originalData.Size
+                part.Transparency = originalData.Transparency
+                part.CanCollide = originalData.CanCollide
+            end
+            OriginalSizes[part] = nil
+        end
     end
 
-    task.spawn(function()
-        while task.wait(0.05) do
-            if Config.Combat.Aimbot then
-                if Config.Combat.AlwaysActive then
-                    Config.Combat.KeyPressed = true
-                else
-                    if Config.Combat.AimKey == "MouseButton2" or Config.Combat.AimKey == "MouseButton1" then
-                        Config.Combat.KeyPressed = UserInputService:IsMouseButtonPressed(Enum.UserInputType[Config.Combat.AimKey])
+    -- Bomb ESP Logic
+    if Config.Visuals.BombEnabled then
+        local bomb = workspace:FindFirstChild("Debris") and workspace.Debris:FindFirstChild("Bomb")
+        if bomb then
+            local bombPos = bomb:IsA("BasePart") and bomb.Position or (bomb:IsA("Model") and bomb:GetModelCFrame().Position)
+            if bombPos then
+                local vector, onScreen = Camera:WorldToViewportPoint(bombPos)
+                if onScreen and vector.Z > 0 then
+                    local distance = (Camera.CFrame.Position - bombPos).Magnitude
+                    BombBox.Size = Vector2.new(20, 20)
+                    BombBox.Position = Vector2.new(vector.X - 10, vector.Y - 10)
+                    BombBox.Visible = true
+                    
+                    BombName.Position = Vector2.new(vector.X, vector.Y - 25)
+                    BombName.Text = "BOMB"
+                    if Config.Visuals.BombDistance then BombName.Text = BombName.Text .. " [" .. math.floor(distance) .. "m]" end
+                    BombName.Visible = Config.Visuals.BombName or Config.Visuals.BombDistance
+                    
+                    if Config.Visuals.BombTracers then
+                        BombTracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                        BombTracer.To = Vector2.new(vector.X, vector.Y)
+                        BombTracer.Visible = true
                     else
-                        Config.Combat.KeyPressed = UserInputService:IsKeyDown(Enum.KeyCode[Config.Combat.AimKey])
+                        BombTracer.Visible = false
+                    end
+                else
+                    BombBox.Visible = false
+                    BombName.Visible = false
+                    BombTracer.Visible = false
+                end
+            else
+                BombBox.Visible = false
+                BombName.Visible = false
+                BombTracer.Visible = false
+            end
+        else
+            BombBox.Visible = false
+            BombName.Visible = false
+            BombTracer.Visible = false
+        end
+    else
+        BombBox.Visible = false
+        BombName.Visible = false
+        BombTracer.Visible = false
+    end
+end)
+
+-- ==========================================
+-- 11. MOVEMENT LOGIC
+-- ==========================================
+UserInputService.JumpRequest:Connect(function()
+    if Config.Movement.InfiniteJump then
+        local char = LocalPlayer.Character
+        if char then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if Config.Movement.AutoBhop and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+        local char = LocalPlayer.Character
+        if char then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum and hum:GetState() ~= Enum.HumanoidStateType.Jumping and hum:GetState() ~= Enum.HumanoidStateType.Freefall then
+                hum.Jump = true
+            end
+        end
+    end
+end)
+
+-- ==========================================
+-- 12. ULTRA COMBAT LOGIC
+-- ==========================================
+local currentTarget = nil
+local lockedTargetModel = nil
+local lastShotTime = 0
+local originalCameraType = Camera.CameraType
+
+local function IsVisible(targetPart)
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+    local origin = Camera.CFrame.Position
+    local direction = (targetPart.Position - origin)
+    local result = workspace:Raycast(origin, direction, raycastParams)
+    if result then return false end
+    return true
+end
+
+task.spawn(function()
+    while task.wait(0.02) do
+        if Config.Combat.Aimbot then
+            if Config.Combat.AlwaysActive then
+                Config.Combat.KeyPressed = true
+            else
+                if Config.Combat.AimKey == "MouseButton2" or Config.Combat.AimKey == "MouseButton1" then
+                    Config.Combat.KeyPressed = UserInputService:IsMouseButtonPressed(Enum.UserInputType[Config.Combat.AimKey])
+                else
+                    Config.Combat.KeyPressed = UserInputService:IsKeyDown(Enum.KeyCode[Config.Combat.AimKey])
+                end
+            end
+            
+            if Config.Combat.KeyPressed then
+                local closest = nil
+                local shortestDist = Config.Combat.FOV
+                local bestHealth = 9999
+                local center = Camera.ViewportSize / 2
+                local targetLocked = false
+
+                if Config.Combat.TargetLock and lockedTargetModel and lockedTargetModel.Parent then
+                    local targetData = nil
+                    for _, t in ipairs(cachedTargets) do
+                        if t.Head == lockedTargetModel then targetData = t break end
+                    end
+                    
+                    if targetData then
+                        local pos, onScreen = Camera:WorldToViewportPoint(lockedTargetModel.Position)
+                        if onScreen and pos.Z > 0 then
+                            if not Config.Combat.WallCheck or IsVisible(lockedTargetModel) then
+                                currentTarget = lockedTargetModel
+                                targetLocked = true
+                            end
+                        end
+                    end
+                    if not targetLocked then
+                        lockedTargetModel = nil
                     end
                 end
-                if Config.Combat.KeyPressed then
-                    local closest = nil
-                    local shortestDist = Config.Combat.FOV
-                    local center = Camera.ViewportSize / 2
+
+                if not targetLocked then
                     for _, target in ipairs(cachedTargets) do
-                        local isTeammate = false
-                        if not Config.Combat.IgnoreTeam and target.Player and LocalPlayer.Team and target.Player.Team then
-                            if target.Player.Team == LocalPlayer.Team then isTeammate = true end
-                        end
-                        if not isTeammate then
-                            local partToAim = target.Head
-                            if partToAim and partToAim.Parent then
-                                local pos, onScreen = Camera:WorldToViewportPoint(partToAim.Position)
-                                if onScreen and pos.Z > 0 then
-                                    local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
-                                    if dist < shortestDist then
-                                        if not Config.Combat.WallCheck or IsVisible(partToAim) then
-                                            shortestDist = dist
+                        local partToAim = target.Head
+                        if Config.Combat.TargetPart == "HumanoidRootPart" then partToAim = target.Root
+                        elseif Config.Combat.TargetPart == "UpperTorso" and target.Torso then partToAim = target.Torso end
+                        
+                        if partToAim and partToAim.Parent then
+                            local pos, onScreen = Camera:WorldToViewportPoint(partToAim.Position)
+                            if onScreen and pos.Z > 0 then
+                                local fovDist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                                local realDist = (Camera.CFrame.Position - partToAim.Position).Magnitude
+                                
+                                if fovDist < shortestDist then
+                                    if not Config.Combat.WallCheck or IsVisible(partToAim) then
+                                        if Config.Combat.TargetPriority == "FOV" then
+                                            shortestDist = fovDist
                                             closest = partToAim
+                                        elseif Config.Combat.TargetPriority == "Distance" then
+                                            if realDist < shortestDist then
+                                                shortestDist = realDist
+                                                closest = partToAim
+                                            end
+                                        elseif Config.Combat.TargetPriority == "Health" then
+                                            if target.Health < bestHealth then
+                                                bestHealth = target.Health
+                                                closest = partToAim
+                                            end
                                         end
                                     end
                                 end
                             end
                         end
                     end
-                    currentTarget = closest
-                else
-                    currentTarget = nil
+                    
+                    if closest then
+                        currentTarget = closest
+                        lockedTargetModel = closest
+                    else
+                        currentTarget = nil
+                        lockedTargetModel = nil
+                    end
                 end
             else
                 currentTarget = nil
+                lockedTargetModel = nil
             end
+        else
+            currentTarget = nil
+            lockedTargetModel = nil
         end
-    end)
+    end
+end)
 
-    RunService:BindToRenderStep("STX_Aimbot", Enum.RenderPriority.Camera.Value + 1, function()
-        if Config.Combat.Aimbot and currentTarget and Config.Combat.KeyPressed then
+RunService:BindToRenderStep("STX_Aimbot", Enum.RenderPriority.Last.Value, function()
+    if Config.Combat.Aimbot and currentTarget and Config.Combat.KeyPressed then
+        if Config.Combat.AimbotMode == "Camera" or Config.Combat.AimbotMode == "Mouse" then
+            if Config.Combat.ForceCamera then
+                UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+                if Camera.CameraType ~= Enum.CameraType.Scriptable then
+                    originalCameraType = Camera.CameraType
+                    Camera.CameraType = Enum.CameraType.Scriptable
+                end
+            end
+
             local targetPos = currentTarget.Position
+            
             if Config.Combat.Prediction then
                 local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue() / 1000
-                local velocity = currentTarget.AssemblyLinearVelocity or Vector3.new(0,0,0)
-                targetPos = targetPos + (velocity * (ping * 1.5))
+                local velocity = currentTarget.AssemblyLinearVelocity or currentTarget.Velocity or Vector3.new(0,0,0)
+                targetPos = targetPos + (velocity * (ping * Config.Combat.PredictionMultiplier))
             end
+            
             local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-            Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, Config.Combat.Smoothness)
-        end
-    end)
+            
+            if Config.Combat.InstantSnap then
+                Camera.CFrame = targetCFrame
+            else
+                Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, Config.Combat.Smoothness)
+            end
 
-    Rayfield:Notify({
-        Title = "STX HUB",
-        Content = "Authentication successful! Welcome to STX HUB.",
-        Duration = 5,
-    })
-end
+            if Config.Combat.CharacterLock then
+                local char = LocalPlayer.Character
+                if char then
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        local lookVector = (Vector3.new(targetPos.X, hrp.Position.Y, targetPos.Z) - hrp.Position).Unit
+                        hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + lookVector)
+                    end
+                end
+            end
+        end
+        
+        if Config.Combat.AutoShoot and lockedTargetModel then
+            if tick() - lastShotTime > 0.15 then
+                local screenPos, onScreen = Camera:WorldToViewportPoint(lockedTargetModel.Position)
+                local center = Camera.ViewportSize / 2
+                local distToCrosshair = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
+                
+                if onScreen and distToCrosshair < 20 then
+                    pcall(function()
+                        mouse1click()
+                    end)
+                    lastShotTime = tick()
+                end
+            end
+        end
+    else
+        if Config.Combat.ForceCamera and Camera.CameraType == Enum.CameraType.Scriptable then
+            Camera.CameraType = originalCameraType
+        end
+    end
+end)
+
+Rayfield:Notify({
+    Title = "STX HUB",
+    Content = "Loaded! Discord link is copied to your clipboard.",
+    Duration = 5,
+})
