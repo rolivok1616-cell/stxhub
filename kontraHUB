@@ -1,5 +1,5 @@
 -- STX HUB Fixed Edition
--- Key is subtostx
+
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
